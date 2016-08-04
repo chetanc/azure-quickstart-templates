@@ -29,11 +29,11 @@
   },
   "variables": {
     "apiVersion": "2015-06-15",
-    "vmSize": "Standard_D3",
+    "vmSize": "Standard_D3_v2",
     "clusterName": "elasticcluster",    
     "imagePublisher" : "OpenLogic",
     "imageOffer" : "CentOS",
-    "imageSku" : "7.1",
+    "imageSku" : "7.2",
     "availabilitySetName": "[concat(parameters('VMPrefix'), 'AvSet')]",
     "storageName" : "[toLower(concat(parameters('commonPrefix'), uniqueString(resourceGroup().id)))]",
     "storageAccountType": "Standard_LRS",
