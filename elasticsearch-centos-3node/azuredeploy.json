@@ -29,7 +29,7 @@
   },
   "variables": {
     "apiVersion": "2015-06-15",
-    "vmSize": "Standard_D1",
+    "vmSize": "Standard_D3",
     "clusterName": "elasticcluster",    
     "imagePublisher" : "OpenLogic",
     "imageOffer" : "CentOS",
@@ -44,8 +44,8 @@
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables ('subnetName'))]",	  
     "numberOfNodes": 3,
-    "scriptBaseUrl": "https://gist.github.com/chetanc/b44764ebc49cf146d42c8fba665d05f5",
-    "elasticScript": "elasticsearchinstall.py",    
+    "scriptBaseUrl": "https://github.com/chetanc/azure-quickstart-templates/tree/branch_cglx/elasticsearch-centos-3node",
+    "elasticScript": "elasticinstall.py",    
     "installScripts": [
         "[concat(variables('scriptBaseUrl'), variables('elasticScript'))]",
         "[concat(variables('scriptBaseUrl'), 'sdc.layout')]"
