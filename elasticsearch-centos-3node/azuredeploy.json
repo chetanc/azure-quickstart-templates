@@ -34,7 +34,7 @@
     "logTableName": "elasticscriptlog",
     "imagePublisher" : "OpenLogic",
     "imageOffer" : "CentOS",
-    "imageSku" : "7.2",
+    "imageSku" : "7.1",
     "availabilitySetName": "[concat(parameters('VMPrefix'), 'AvSet')]",
     "storageName" : "[toLower(concat(parameters('commonPrefix'), uniqueString(resourceGroup().id)))]",
     "storageAccountType": "Standard_LRS",
