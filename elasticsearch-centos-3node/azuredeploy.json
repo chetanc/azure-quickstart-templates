@@ -30,8 +30,7 @@
   "variables": {
     "apiVersion": "2015-06-15",
     "vmSize": "Standard_D1",
-    "clusterName": "elasticcluster",
-    "logTableName": "elasticscriptlog",
+    "clusterName": "elasticcluster",    
     "imagePublisher" : "OpenLogic",
     "imageOffer" : "CentOS",
     "imageSku" : "7.1",
@@ -39,27 +38,17 @@
     "storageName" : "[toLower(concat(parameters('commonPrefix'), uniqueString(resourceGroup().id)))]",
     "storageAccountType": "Standard_LRS",
     "dataDiskSize": "1023",
-    "virtualNetworkName":  "[concat(parameters('commonPrefix'), 'VNet')]" ,
-    "publicIPAddressName": "JumpboxIP",
-    "publicIPAddressType": "Dynamic",
-    "JBNSGName": "JumpboxNSG",
-    "subnetName": "elasticSubnet",
-	  "subnetAdmin": "adminSubnet",
+    "virtualNetworkName":  "[concat(parameters('commonPrefix'), 'VNet')]" ,    
+    "subnetName": "elasticSubnet",	
     "networkInterfaceName": "NIC",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
-    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables ('subnetName'))]",
-	  "subnetAdminRef": "[concat(variables('vnetID'),'/subnets/',variables ('subnetAdmin'))]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables ('subnetName'))]",	  
     "numberOfNodes": 3,
-    "scriptBaseUrl": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/elasticsearch-centos-3node/",
-    "elasticScript": "elasticinstall.py",
-    "jumpboxScript" : "prep-jumpbox.ps1",
+    "scriptBaseUrl": "https://gist.github.com/chetanc/b44764ebc49cf146d42c8fba665d05f5",
+    "elasticScript": "elasticsearchinstall.py",    
     "installScripts": [
         "[concat(variables('scriptBaseUrl'), variables('elasticScript'))]",
         "[concat(variables('scriptBaseUrl'), 'sdc.layout')]"
-    ],
-    "jumpboxScripts": [
-        "[concat(variables('scriptBaseUrl'), variables('jumpboxScript'))]",
-        "[concat(variables('scriptBaseUrl'), 'get-started.ps1')]"
     ]
     
   },
@@ -75,16 +64,7 @@
       "properties": {
         "accountType": "[variables('storageAccountType')]"
       }
-    },
-    {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('publicIPAddressName')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "publicIPAllocationMethod": "[variables('publicIPAddressType')]"
-      }
-    },
+    },    
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Compute/availabilitySets",
@@ -93,39 +73,13 @@
       "tags": {
         "displayName": "AvailabilitySet"
       }
-    },
-    {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('JBNSGName')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "securityRules": [
-          {
-            "name": "rdp_rule",
-            "properties": {
-              "description": "Allow RDP",
-              "protocol": "Tcp",
-              "sourcePortRange": "*",
-              "destinationPortRange": "3389",
-              "sourceAddressPrefix": "Internet",
-              "destinationAddressPrefix": "*",
-              "access": "Allow",
-              "priority": 100,
-              "direction": "Inbound"
-            }
-          }
-        ]
-      }
-    },
+    },    
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
       "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/networkSecurityGroups/', variables('JBNSGName'))]"
-      ],
+      "dependsOn": [],
       "tags": {
         "displayName": "VirtualNetwork"
       },
@@ -135,20 +89,11 @@
             "10.0.0.0/16"
           ]
         },
-        "subnets": [
-          {
-            "name": "[variables('subnetAdmin')]",
-            "properties": {
-              "addressPrefix": "10.0.1.0/24",
-              "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('JBNSGName'))]"
-              }
-            }
-          },
+        "subnets": [          
           {
             "name": "[variables('subnetName')]",
             "properties": {
-              "addressPrefix": "10.0.2.0/24"
+              "addressPrefix": "10.0.1.0/24"
             }
           }
         ]
@@ -176,7 +121,7 @@
             "name": "ipconfig1",
             "properties": {
               "privateIPAllocationMethod": "Static",
-              "privateIPAddress": "[concat('10.0.2.1', copyindex())]",
+              "privateIPAddress": "[concat('10.0.1.1', copyindex())]",
               "subnet": {
                 "id": "[variables('subnetRef')]"
               }
@@ -270,100 +215,6 @@
         "settings": {
           "fileUris": "[variables('installScripts')]",
           "commandToExecute": "[concat('python ',variables('elasticScript'), ' ', variables('clusterName'), ' ', variables('numberOfNodes'), ' ', variables('storageName'), ' ', listKeys(resourceId('Microsoft.Storage/storageAccounts',variables('storageName')) ,variables('apiVersion')).key1)]"
-        }
-      }
-    },
-    {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Network/networkInterfaces",
-      "name": "JumpboxNic",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "NetworkInterface"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
-      ],
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
-            "properties": {
-              "privateIPAllocationMethod": "Static",
-              "privateIPAddress": "10.0.1.10",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
-              },
-              "subnet": {
-                "id": "[variables('subnetAdminRef')]"
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Compute/virtualMachines",
-      "name": "Jumpbox",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "VirtualMachines"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/', variables('storageName'))]",
-        "Microsoft.Network/networkInterfaces/jumpboxNic"
-      ],
-      "properties": {
-        "hardwareProfile": {
-          "vmSize": "[variables('vmSize')]"
-        },
-        "osProfile": {
-          "computerName": "Jumpbox",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
-        },
-        "storageProfile": {
-          "imageReference": {
-            "publisher": "MicrosoftWindowsServer",
-            "offer": "WindowsServer",
-            "sku": "2012-R2-Datacenter",
-            "version": "latest"
-          },
-          "osDisk": {
-            "name": "osdisk",
-            "vhd": {
-              "uri": "[concat('http://',variables('storageName'),'.blob.core.windows.net/vhds/jumpbox-osdisk.vhd')]"
-            },
-            "caching": "ReadWrite",
-            "createOption": "FromImage"
-          }
-        },
-        "networkProfile": {
-          "networkInterfaces": [
-            {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces','jumpboxNic')]"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "Jumpbox/PrepExtension",
-      "apiVersion": "[variables('apiVersion')]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "Microsoft.Compute/virtualMachines/Jumpbox"
-      ],
-      "properties": {
-        "publisher": "Microsoft.Compute",
-        "type": "CustomScriptExtension",
-        "typeHandlerVersion": "1.4",
-        "settings": {
-          "fileUris": "[variables('jumpboxScripts')]",
-          "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File ', variables('jumpboxScript'))]"
         }
       }
     }
