@@ -17,7 +17,7 @@ print "accountkey = " + accountkey
 hostname = socket.gethostname()
 print "hostname: " + hostname
 
-hostbase = "10.0.2.1"
+hostbase = "10.0.1.1"
 print "hostbase: " + hostbase
 
 
@@ -28,9 +28,11 @@ def RunCommand(cmd):
 
 
 cmds = ["yum -y install nano",
-	"yum -y install java-1.8.0-openjdk.x86_64",
-	"curl 'https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.3.noarch.rpm' -o 'elasticsearch-1.7.3.noarch.rpm'",
-	"rpm -ivh elasticsearch-1.7.3.noarch.rpm",
+	"cd ~",
+	"wget --no-cookies --no-check-certificate --header \"Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u60-b27/jdk-8u60-linux-x64.rpm\"",
+	"yum localinstall jdk-8u60-linux-x64.rpm",
+	"curl 'https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.5.noarch.rpm' -o 'elasticsearch-1.7.5.noarch.rpm'",
+	"rpm -ivh elasticsearch-1.7.5.noarch.rpm",
 	"systemctl enable elasticsearch.service",
 	"/usr/share/elasticsearch/bin/plugin -install royrusso/elasticsearch-HQ",
 	"/usr/share/elasticsearch/bin/plugin -install elasticsearch/elasticsearch-cloud-azure/2.8.2"]
@@ -91,7 +93,28 @@ config.write("cluster.name: " + clustername + "\n")
 config.write("node.name: " + hostname + "\n")
 config.write("path.data: " + datapath + "\n")
 config.write("discovery.zen.ping.multicast.enabled: false\n")
+config.write("plugin.mandatory: mapper-attachments\n")
+config.write("gateway.recover_after_nodes: 1\n")
 config.write("discovery.zen.ping.unicast.hosts: " + hosts + "\n")
+config.write("discovery.zen.minimum_master_nodes: 1\n")
+config.write("discovery.zen.ping.timeout: 3s\n")
+config.write("gateway.recover_after_nodes: 1\n")
+config.write("http.cors.enabled: true\n")
+config.write("http.cors.allow-origin: \"/.*/\"\n")
+config.write("index.search.slowlog.threshold.query.warn: 10s\n")
+config.write("index.search.slowlog.threshold.query.info: 5s\n")
+config.write("index.search.slowlog.threshold.query.debug: 2s\n")
+config.write("index.search.slowlog.threshold.query.trace: 50ms\n")
+config.write("index.search.slowlog.threshold.fetch.warn: 2s\n")
+config.write("index.search.slowlog.threshold.fetch.info: 800ms\n")
+config.write("index.search.slowlog.threshold.fetch.debug: 50ms\n")
+config.write("index.search.slowlog.threshold.fetch.trace: 20ms\n")
+config.write("index.indexing.slowlog.threshold.index.warn: 10s\n")
+config.write("index.indexing.slowlog.threshold.index.info: 5s\n")
+config.write("index.indexing.slowlog.threshold.index.debug: 500ms\n")
+config.write("index.indexing.slowlog.threshold.index.trace: 50ms\n")
+config.write("bootstrap.mlockall: true\n")
+config.write("discovery.zen.ping.multicast.enabled: false\n")
 config.write("node.master: true\n")
 config.write("node.data: true\n")
 config.write("cloud:\n") 
